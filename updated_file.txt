@@ -1,0 +1,156 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import confusion_matrix, precision_score, recall_score, f1_score, roc_curve, auc
+import matplotlib.pyplot as plt
+import os
+from sklearn.preprocessing import StandardScaler
+
+# 1. Model Accuracy and Evaluation
+def evaluate_model(model, X_test, y_test, model_name):
+    """
+    Evaluates the performance of the given model and prints detailed results.
+
+    Args:
+        model: The trained machine learning model.
+        X_test (pd.DataFrame): The test set features.
+        y_test (pd.Series): The test set labels.
+        model_name (str): The name of the model ('Random Forest' or 'Logistic Regression').
+    """
+    y_pred = model.predict(X_test)
+    y_pred_proba = model.predict_proba(X_test)[:, 1]  # Get probabilities for the positive class
+
+    # Confusion Matrix
+    cm = confusion_matrix(y_test, y_pred)
+    print(f"\n{model_name} - Confusion Matrix:")
+    print(cm)
+
+    # Precision, Recall, F1 Score
+    precision = precision_score(y_test, y_pred)
+    recall = recall_score(y_test, y_pred)
+    f1 = f1_score(y_test, y_pred)
+    print(f"\n{model_name} - Precision: {precision:.4f}")
+    print(f"{model_name} - Recall: {recall:.4f}")
+    print(f"{model_name} - F1 Score: {f1:.4f}")
+
+    # ROC Curve and AUC (for binary classification)
+    fpr, tpr, thresholds = roc_curve(y_test, y_pred_proba)
+    roc_auc = auc(fpr, tpr)
+
+    plt.figure(figsize=(8, 6))
+    plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC curve (AUC = {roc_auc:.2f})')
+    plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+    plt.xlabel('False Positive Rate')
+    plt.ylabel('True Positive Rate')
+    plt.title(f'{model_name} - Receiver Operating Characteristic')
+    plt.legend(loc="lower right")
+    plt.show()
+
+# 3. User Customization (Parameter Adjustment) -  Implemented directly in the main function
+
+# 4. Testing with Real Data - Addressed in main function with option to use full dataset.
+
+# 5. Front-End Features - Simulated with print statements and basic structure.
+def display_real_time_alert(transaction_id, alert_level, message):
+    """Simulates a real-time alert.
+
+    Args:
+        transaction_id (int): The ID of the transaction.
+        alert_level (str): The level of the alert (e.g., 'High', 'Medium', 'Low').
+        message (str): The alert message.
+    """
+    print(f"\nReal-Time Alert - Transaction ID: {transaction_id}")
+    print(f"Alert Level: {alert_level}")
+    print(f"Message: {message}")
+
+def generate_transaction_report(transaction_data):
+    """
+    Simulates generating a detailed transaction report.
+
+    Args:
+        transaction_data (pd.DataFrame): DataFrame containing transaction data.
+    """
+    print("\nDetailed Transaction Report:")
+    print(transaction_data.to_markdown(index=False, numalign="left", stralign="left"))
+
+def log_flagged_activity(transaction_id, reason):
+    """
+    Simulates logging a flagged activity.
+
+    Args:
+        transaction_id (int): The ID of the transaction.
+        reason (str): The reason for flagging the transaction.
+    """
+    print(f"\nFlagged Activity Log - Transaction ID: {transaction_id}, Reason: {reason}")
+
+def main():
+    """
+    Main function to run the fraud detection process.
+    """
+    # Load the dataset
+    # Construct the file path relative to the current working directory
+    file_path = 'creditcard.csv'
+    if not os.path.exists(file_path):
+        print(f"Error: File not found at {file_path}")
+        return
+
+    data = pd.read_csv(file_path)
+
+    # Preprocessing
+    data['Amount'] = StandardScaler().fit_transform(data['Amount'].values.reshape(-1, 1))
+    X = data.drop(['Time', 'Class'], axis=1)
+    y = data['Class']
+
+    # Splitting the data
+    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+    # Choose a model
+    model_name = 'Random Forest'  # Or 'Logistic Regression'
+
+    # Train the model
+    if model_name == 'Random Forest':
+        model = RandomForestClassifier(random_state=42)
+    elif model_name == 'Logistic Regression':
+        model = LogisticRegression(random_state=42)
+    else:
+        print("Invalid model name.")
+        return
+
+    model.fit(X_train, y_train)
+
+    # 2. Model Accuracy and Evaluation
+    evaluate_model(model, X_test, y_test, model_name)
+
+    # 3. User Customization (Parameter Adjustment)
+    # Example: Adjusting transaction amount threshold
+    print("\nUser Customization Example: Adjusting transaction amount threshold")
+    amount_threshold = 2  # Example threshold
+    print(f"Transactions with amount > {amount_threshold} will be flagged.")
+
+    # Simulate fraud scenario with adjusted parameter
+    high_amount_transactions = data[data['Amount'] > amount_threshold]
+    print("\nHigh Amount Transactions (for simulation):")
+    print(high_amount_transactions.head().to_markdown(index=False, numalign="left", stralign="left"))
+
+    # 4. Testing with Real Data - using the full dataset as an example.  In a real application, you would load a separate, unseen dataset.
+    print("\nTesting with a larger portion of data (simulated real-world scenario):")
+    model.fit(X, y)  # Retrain on the entire dataset (or a larger subset)
+    evaluate_model(model, X_test, y_test, model_name) # Evaluate on the test set.
+
+    # 5. Front-End Features (Simulated)
+    # Simulate real-time alert
+    display_real_time_alert(transaction_id=12345, alert_level='High', message='Suspicious transaction detected: Amount exceeds threshold.')
+
+    # Simulate transaction report
+    generate_transaction_report(data.head())
+
+    # Simulate logging flagged activity
+    log_flagged_activity(transaction_id=12345, reason='Amount exceeds threshold')
+
+if _name_ == "_main_":
+    main()
+
+
+
